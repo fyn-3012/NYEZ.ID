@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NYEZ.ID Admin - Premium Cloud Control</title>
+    
+    <!-- Perpustakaan Eksternal -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #8e44ad;
+            --primary-dark: #6c3483;
+            --primary-light: #a569bd;
+            --bg: #F0F2F5;
+            --text-main: #1a1a1a;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --glass: rgba(255, 255, 255, 0.7);
+            --shadow-sm: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            --sidebar-width: 280px;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --gsheet: #0f9d58;
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+        }
+
+        /* Gaya Dasar */
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text-main); 
+            display: flex; 
+            min-height: 100vh; 
+            overflow-x: hidden; 
+        }
+
+        /* --- DEKORASI LATAR BELAKANG --- */
+        .bg-decorations {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: move 20s infinite alternate;
+        }
+        .blob-1 { width: 600px; height: 600px; background: var(--primary-light); top: -200px; left: -100px; }
+        .blob-2 { width: 500px; height: 500px; background: #3b82f6; bottom: -100px; right: -50px; animation-delay: -5s; }
+
+        @keyframes move {
+            from { transform: translate(0, 0) rotate(0deg); }
+            to { transform: translate(100px, 50px) rotate(30deg); }
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #0f172a;
+            color: white;
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-logo { 
+            font-size: 1.8rem; 
+            font-weight: 800; 
+            color: var(--white); 
+            margin-bottom: 60px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+            letter-spacing: -1px;
+        }
+        .sidebar-logo i { color: var(--primary-light); }
+
+        .nav-group { display: flex; flex-direction: column; gap: 8px; }
+        
+        .nav-btn {
+            background: transparent; border: none; color: #94a3b8; padding: 14px 18px;
+            text-align: left; border-radius: var(--radius-lg); cursor: pointer; font-weight: 600;
+            display: flex; align-items: center; gap: 14px; width: 100%;
+            transition: 0.3s all;
+            font-size: 0.95rem;
+        }
+        .nav-btn i { font-size: 1.2rem; width: 24px; text-align: center; }
+        .nav-btn:hover { color: white; background: rgba(255,255,255,0.05); }
+        .nav-btn.active { 
+            background: var(--primary); 
+            color: white; 
+            box-shadow: 0 8px 16px rgba(142, 68, 173, 0.4); 
+        }
+
+        /* --- KONTEN UTAMA --- */
+        .main-content { 
+            flex-grow: 1;
+            margin-left: var(--sidebar-width); 
+            padding: 48px; 
+            width: calc(100% - var(--sidebar-width)); 
+            max-width: 1600px;
+            position: relative;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 40px;
+        }
+        header h2 { font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; }
+
+        /* --- STATS CARDS --- */
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 25px; 
+            margin-bottom: 40px; 
+        }
+
+        .stat-card { 
+            background: var(--white); 
+            padding: 30px; 
+            border-radius: var(--radius-xl); 
+            box-shadow: var(--shadow-md); 
+            display: flex; 
+            align-items: center; 
+            gap: 20px;
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+
+        .stat-icon { 
+            width: 60px; height: 60px; border-radius: 20px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1.5rem; 
+        }
+        .icon-rev { background: #ecfdf5; color: var(--success); }
+        .icon-ord { background: #f5f3ff; color: var(--primary); }
+        .icon-gsheet { background: #eefdf3; color: var(--gsheet); }
+
+        .stat-info span { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-info h2 { font-size: 1.8rem; font-weight: 900; margin-top: 4px; color: #1e293b; }
+
+        /* --- CARDS & TABLES --- */
+        .card { 
+            background: var(--white); 
+            border-radius: var(--radius-xl); 
+            padding: 35px; 
+            box-shadow: var(--shadow-md); 
+            margin-bottom: 30px; 
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 30px; 
+            flex-wrap: wrap;
+            gap: 15px;
+            width: 100%;
+        }
+        .card-header h3 { font-weight: 800; font-size: 1.4rem; color: #1e293b; }
+
+        .table-container { width: 100%; overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid #f1f5f9; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { text-align: left; padding: 20px; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; border-bottom: 2px solid #f1f5f9; font-weight: 800; letter-spacing: 0.5px; background: #f8fafc; }
+        td { padding: 20px; font-size: 0.95rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
+        tr:last-child td { border-bottom: none; }
+        
+        .product-img-mini { width: 50px; height: 50px; border-radius: 14px; object-fit: cover; background: #f1f5f9; }
+        .badge { padding: 8px 16px; border-radius: 50px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .badge-success { background: #ecfdf5; color: var(--success); }
+        .badge-danger { background: #fef2f2; color: var(--danger); }
+        .badge-pending { background: #fffbeb; color: var(--warning); }
+        .badge-info { background: #eff6ff; color: var(--info); }
+
+        /* --- BUTTONS --- */
+        .btn { 
+            padding: 14px 24px; border-radius: 14px; border: none; 
+            font-weight: 700; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.9rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(142, 68, 173, 0.3); }
+        .btn-gsheet { background: var(--gsheet); color: white; box-shadow: 0 4px 12px rgba(15, 157, 88, 0.2); }
+        .btn-ghost { background: #f1f5f9; color: #64748b; }
+        .btn-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fee2e2; }
+
+        /* --- MODAL --- */
+        .modal-overlay { 
+            position: fixed; inset: 0;
+            background: rgba(15, 23, 42, 0.6); 
+            backdrop-filter: blur(8px); 
+            z-index: 9999; 
+            display: flex; align-items: center; justify-content: center; 
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal-card { 
+            background: white; 
+            width: 100%; max-width: 580px; 
+            border-radius: 32px; 
+            padding: 0; 
+            box-shadow: var(--shadow-lg); 
+            max-height: 90vh; 
+            animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        @keyframes modalSlideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-body { padding: 40px; overflow-y: auto; flex-grow: 1; }
+        .modal-footer { padding: 25px 40px; background: #f8fafc; border-top: 1px solid #f1f5f9; flex-shrink: 0; }
+
+        /* --- IMPROVED INPUT GROUP --- */
+        .input-group { margin-bottom: 24px; position: relative; }
+        .input-group label { 
+            display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.75rem; 
+            color: #64748b; text-transform: uppercase; letter-spacing: 1px; 
+        }
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper i { position: absolute; left: 16px; color: #94a3b8; font-size: 1rem; transition: 0.3s; }
+        
+        .input-box { 
+            width: 100%; padding: 14px 18px; padding-left: 48px; border-radius: 14px; 
+            border: 2px solid #f1f5f9; outline: none; transition: 0.3s; 
+            font-size: 0.95rem; color: var(--text-main); background: #f8fafc;
+            font-weight: 600;
+        }
+        .input-box:focus { 
+            border-color: var(--primary-light); 
+            background: #ffffff; 
+            box-shadow: 0 0 0 4px rgba(142, 68, 173, 0.08); 
+        }
+        .input-box:focus + i { color: var(--primary); }
+
+        /* --- AESTHETIC CATEGORY SELECTOR --- */
+        .category-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+            margin-top: 5px;
+        }
+        .category-option {
+            padding: 14px 10px;
+            border-radius: 14px;
+            border: 2px solid #f1f5f9;
+            background: #f8fafc;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .category-option i {
+            font-size: 1.4rem;
+            color: #94a3b8;
+            transition: 0.3s;
+        }
+        .category-option span {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .category-option:hover {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+        }
+        .category-option.active {
+            border-color: var(--primary);
+            background: #f5f3ff;
+            box-shadow: 0 4px 12px rgba(142, 68, 173, 0.1);
+        }
+        .category-option.active i {
+            color: var(--primary);
+            transform: scale(1.1);
+        }
+        .category-option.active span {
+            color: var(--primary);
+        }
+
+        #sync-status {
+            display: flex; align-items: center; gap: 8px; padding: 8px 16px; 
+            border-radius: 12px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(4px);
+            font-size: 0.75rem; font-weight: 800;
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 1024px) {
+            .sidebar { width: 85px; padding: 40px 10px; }
+            .sidebar-logo span, .nav-btn span { display: none; }
+            .main-content { margin-left: 85px; width: calc(100% - 85px); padding: 32px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .card-header { justify-content: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-decorations">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo"><i class="fas fa-cloud"></i> <span>NYEZ ADMIN</span></div>
+        <nav class="nav-group">
+            <button class="nav-btn active" onclick="switchTab('dashboard', this)">
+                <i class="fas fa-chart-pie"></i> <span>Ringkasan Utama</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('products', this)">
+                <i class="fas fa-coffee"></i> <span>Katalog Menu</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('toppings', this)">
+                <i class="fas fa-ice-cream"></i> <span>Daftar Topping</span>
+            </button>
+            <button class="nav-btn" id="nav-btn-config" onclick="switchTab('config', this)">
+                <i class="fas fa-key"></i> <span>Koneksi Cloud</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('integration', this)">
+                <i class="fab fa-google-drive"></i> <span>Google Sheet</span>
+            </button>
+        </nav>
+        
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div style="font-size: 0.6rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Akses: Super Admin</div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- Header Section -->
+        <header>
+            <div>
+                <h2 id="page-title">Ringkasan Utama</h2>
+                <p id="page-subtitle" style="color: var(--text-muted); font-weight: 500; margin-top: 4px;">Pantau performa toko NYEZ.ID Anda secara real-time.</p>
+            </div>
+            <div id="sync-status" style="color: var(--danger);">
+                <i class="fas fa-circle-notch fa-spin"></i>
+                <span>MENGHUBUNGKAN...</span>
+            </div>
+        </header>
+
+        <!-- Tab: Dashboard -->
+        <div id="tab-dashboard" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon icon-rev"><i class="fas fa-wallet"></i></div>
+                    <div class="stat-info"><span>Omzet Berhasil</span><h2 id="total-revenue">Rp 0</h2></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-ord"><i class="fas fa-receipt"></i></div>
+                    <div class="stat-info"><span>Total Transaksi</span><h2 id="total-orders">0</h2></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-gsheet"><i class="fas fa-file-excel"></i></div>
+                    <div class="stat-info"><span>Sinkron Sheet</span><h2 id="synced-count">0</h2></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Riwayat Transaksi Terkini</h3>
+                    <button class="btn btn-gsheet" onclick="syncAllToSheet()"><i class="fas fa-cloud-arrow-up"></i> Sinkron ke Google Sheet</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Waktu</th><th>Pelanggan</th><th>Items</th><th>Total</th><th>Status</th></tr>
+                        </thead>
+                        <tbody id="orders-tbody">
+                            <!-- Dimuat via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Products -->
+        <div id="tab-products" class="tab-content hidden">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Katalog Menu Minuman 🥤</h3>
+                    <button class="btn btn-primary" onclick="openModal('product')"><i class="fas fa-plus"></i> Tambah Menu</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Gambar</th><th>Nama Menu</th><th>Kategori</th><th>Harga</th><th>Status Stok</th><th>Aksi</th></tr>
+                        </thead>
+                        <tbody id="products-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Toppings -->
+        <div id="tab-toppings" class="tab-content hidden">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Manajemen Topping ✨</h3>
+                    <button class="btn btn-primary" onclick="openModal('topping')"><i class="fas fa-plus"></i> Tambah Topping</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Nama Topping</th><th>Harga Tambahan</th><th>Ketersediaan</th><th>Aksi</th></tr>
+                        </thead>
+                        <tbody id="toppings-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Cloud Config -->
+        <div id="tab-config" class="tab-content hidden">
+            <div class="card" style="max-width: 650px;">
+                <h3 style="margin-bottom: 25px;">Koneksi Database Cloud 🔑</h3>
+                <div class="input-group">
+                    <label>Supabase Project URL</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="sb-url" class="input-box" placeholder="https://xxxxxxxx.supabase.co">
+                        <i class="fas fa-link"></i>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Supabase API Anon Key</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="sb-key" class="input-box" placeholder="Kunci Anonim">
+                        <i class="fas fa-key"></i>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <button class="btn btn-primary" onclick="saveCloudConfig()" style="flex: 2; justify-content: center;">
+                        <i class="fas fa-plug-circle-check"></i> Hubungkan Database
+                    </button>
+                    <button class="btn btn-ghost" onclick="resetToDefault()" style="flex: 1; justify-content: center;">
+                        <i class="fas fa-rotate"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Integration -->
+        <div id="tab-integration" class="tab-content hidden">
+            <div class="card" style="max-width: 650px;">
+                <h3 style="margin-bottom: 25px;">Integrasi Laporan Sheet 📊</h3>
+                <div class="input-group">
+                    <label>Google Apps Script URL</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="gs-url" class="input-box" placeholder="https://script.google.com/macros/s/.../exec">
+                        <i class="fab fa-google-drive"></i>
+                    </div>
+                </div>
+                <button class="btn btn-gsheet" onclick="saveSheetConfig()" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-save"></i> Simpan URL Laporan
+                </button>
+                <div style="margin-top: 25px; padding: 20px; background: #f8fafc; border-radius: var(--radius-lg); font-size: 0.85rem; color: #64748b; line-height: 1.6;">
+                    <p><b>Tips:</b> Gunakan URL dari menu "Deploy as Web App" di Google Apps Script Anda untuk memungkinkan sinkronisasi otomatis riwayat transaksi.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Form (Product) -->
+    <div id="modalProduct" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-body">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px;">
+                    <div style="width: 45px; height: 45px; border-radius: 12px; background: #f5f3ff; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <i class="fas fa-mug-hot"></i>
+                    </div>
+                    <div>
+                        <h2 style="font-weight: 800; font-size: 1.4rem;">Tambah Menu</h2>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Masukkan detail produk minuman baru Anda.</p>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Nama Minuman</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="p-name" class="input-box" placeholder="Contoh: Matcha Latte">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Pilih Kategori</label>
+                    <div class="category-selector">
+                        <div class="category-option active" data-value="chocolate" onclick="setCategory('chocolate', this)">
+                            <i class="fas fa-cookie-bite"></i>
+                            <span>Chocolate</span>
+                        </div>
+                        <div class="category-option" data-value="coffee" onclick="setCategory('coffee', this)">
+                            <i class="fas fa-coffee"></i>
+                            <span>Coffee</span>
+                        </div>
+                        <div class="category-option" data-value="fruit" onclick="setCategory('fruit', this)">
+                            <i class="fas fa-apple-alt"></i>
+                            <span>Fruit</span>
+                        </div>
+                        <div class="category-option" data-value="classic" onclick="setCategory('classic', this)">
+                            <i class="fas fa-mug-hot"></i>
+                            <span>Classic</span>
+                        </div>
+                        <div class="category-option" data-value="spesial" onclick="setCategory('spesial', this)">
+                            <i class="fas fa-star"></i>
+                            <span>Spesial</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="p-cat" value="chocolate">
+                </div>
+
+                <div class="input-group">
+                    <label>Harga Jual (Rp)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="p-price" class="input-box" placeholder="15000">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Link Gambar Produk</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="p-img" class="input-box" placeholder="https://image-url.com/image.jpg">
+                        <i class="fas fa-image"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <div style="display: flex; gap: 15px;">
+                    <button class="btn btn-ghost" onclick="closeModal()" style="flex: 1; justify-content: center;">Batal</button>
+                    <button class="btn btn-primary" onclick="handleSaveProduct()" style="flex: 1.5; justify-content: center;">Simpan Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form (Topping) -->
+    <div id="modalTopping" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-body">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px;">
+                    <div style="width: 45px; height: 45px; border-radius: 12px; background: #f0f9ff; color: var(--info); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <i class="fas fa-ice-cream"></i>
+                    </div>
+                    <div>
+                        <h2 style="font-weight: 800; font-size: 1.4rem;">Tambah Topping</h2>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Tambahkan pilihan topping menarik.</p>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Nama Topping</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="t-name" class="input-box" placeholder="Contoh: Bubble Pearl">
+                        <i class="fas fa-cookie"></i>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Harga Tambahan (Rp)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="t-price" class="input-box" placeholder="3000">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div style="display: flex; gap: 15px;">
+                    <button class="btn btn-ghost" onclick="closeModal()" style="flex: 1; justify-content: center;">Batal</button>
+                    <button class="btn btn-primary" onclick="handleSaveTopping()" style="flex: 1.5; justify-content: center;">Simpan Topping</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_URL = "https://zbnrjecfdkhgonzuzgvv.supabase.co";
+        const DEFAULT_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpibnJqZWNmZGtoZ29uenV6Z3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MTAwMjEsImV4cCI6MjA4MzI4NjAyMX0.m5oLqEQEynOsVHOxK_ZAvwggXX380toeGZ-ESfbJng4";
+
+        let sb = null;
+        let ordersData = [];
+
+        async function initApp() {
+            const statusEl = document.querySelector('#sync-status span');
+            const statusIcon = document.querySelector('#sync-status i');
+
+            let url = (localStorage.getItem('sb_url') || DEFAULT_URL).trim().replace(/\/$/, "");
+            let key = (localStorage.getItem('sb_key') || DEFAULT_KEY).trim();
+
+            if (url && key) {
+                try {
+                    sb = supabase.createClient(url, key);
+                    const success = await loadAllData();
+                    
+                    if (success) {
+                        statusEl.innerText = 'LIVE CLOUD AKTIF';
+                        document.getElementById('sync-status').style.color = 'var(--success)';
+                        statusIcon.className = 'fas fa-circle-check';
+                        setupRealtime();
+                        
+                        // Menambahkan interval refresh otomatis setiap 5 detik
+                        setInterval(loadAllData, 5000);
+                    } else {
+                        throw new Error("Gagal mengambil data.");
+                    }
+                    
+                    document.getElementById('sb-url').value = url;
+                    document.getElementById('sb-key').value = key;
+                } catch (e) {
+                    console.error("Supabase Error:", e);
+                    statusEl.innerText = 'CLOUD TERPUTUS';
+                    document.getElementById('sync-status').style.color = 'var(--danger)';
+                    statusIcon.className = 'fas fa-circle-xmark';
+                }
+            }
+        }
+
+        async function loadAllData() {
+            if(!sb) return false;
+            try {
+                const fetchProducts = sb.from('products').select('*').order('created_at', { ascending: false });
+                const fetchToppings = sb.from('toppings').select('*').order('name');
+                const fetchOrders = sb.from('orders').select('*').order('created_at', { ascending: false });
+
+                const [pRes, tRes, oRes] = await Promise.all([fetchProducts, fetchToppings, fetchOrders]);
+                
+                if(pRes.error || tRes.error || oRes.error) return false;
+
+                ordersData = oRes.data || [];
+                renderProducts(pRes.data || []);
+                renderToppings(tRes.data || []);
+                renderOrders(ordersData);
+                return true;
+            } catch (err) {
+                return false;
+            }
+        }
+
+        function setupRealtime() {
+            if(!sb) return;
+            sb.removeAllChannels();
+            sb.channel('admin-sync').on('postgres_changes', { event: '*', schema: 'public' }, () => loadAllData()).subscribe();
+        }
+
+        function renderProducts(data) {
+            const tbody = document.getElementById('products-tbody');
+            if(!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Daftar menu masih kosong.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(p => `
+                <tr>
+                    <td><img src="${p.image_url}" class="product-img-mini" onerror="this.src='https://via.placeholder.com/60'"></td>
+                    <td style="font-weight:700; color:#1e293b;">${p.name}</td>
+                    <td><span class="badge" style="background:#f1f5f9; color:var(--text-muted);">${p.category}</span></td>
+                    <td style="font-weight:800; color:var(--primary);">Rp ${p.price.toLocaleString()}</td>
+                    <td>
+                        <span class="badge ${p.is_available ? 'badge-success':'badge-danger'}" onclick="toggleStatus('products', '${p.id}', ${p.is_available})">
+                            ${p.is_available ? 'Tersedia':'Habis'}
+                        </span>
+                    </td>
+                    <td><button onclick="handleDelete('products', '${p.id}')" style="color:var(--danger); border:none; background:none; cursor:pointer; font-size:1.1rem;"><i class="fas fa-trash-can"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderToppings(data) {
+            const tbody = document.getElementById('toppings-tbody');
+            if(!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Daftar topping masih kosong.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(t => `
+                <tr>
+                    <td style="font-weight:700; color:#1e293b;">${t.name}</td>
+                    <td style="font-weight:800; color:var(--primary);">+ Rp ${t.price.toLocaleString()}</td>
+                    <td>
+                        <span class="badge ${t.is_available ? 'badge-success':'badge-danger'}" onclick="toggleStatus('toppings', '${t.id}', ${t.is_available})">
+                            ${t.is_available ? 'Tersedia':'Habis'}
+                        </span>
+                    </td>
+                    <td><button onclick="handleDelete('toppings', '${t.id}')" style="color:var(--danger); border:none; background:none; cursor:pointer; font-size:1.1rem;"><i class="fas fa-trash-can"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderOrders(data) {
+            let rev = 0, ord = 0, gsync = 0;
+            const tbody = document.getElementById('orders-tbody');
+            
+            if(!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">Belum ada riwayat transaksi cloud.</td></tr>';
+            } else {
+                tbody.innerHTML = data.map(o => {
+                    ord++;
+                    const cleanPrice = parseInt(o.total_price.replace(/[^\d]/g, '')) || 0;
+                    if(o.status === 'Berhasil') rev += cleanPrice;
+                    if(o.gsheet_synced) gsync++;
+
+                    const sClass = o.status === 'Berhasil' ? 'badge-success' : (o.status.includes('Batal') ? 'badge-danger' : 'badge-pending');
+                    return `
+                        <tr>
+                            <td style="font-size:0.75rem; color:#94a3b8; font-weight:600;">${new Date(o.created_at).toLocaleString('id-ID')}</td>
+                            <td style="font-weight:700; color:#1e293b;">${o.customer_name}</td>
+                            <td style="font-size:0.8rem; color:#64748b; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${o.items.map(i => i.name).join(', ')}</td>
+                            <td style="font-weight:800; color:var(--primary);">${o.total_price}</td>
+                            <td><span class="badge ${sClass}">${o.status}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('total-revenue').innerText = "Rp " + rev.toLocaleString('id-ID');
+            document.getElementById('total-orders').innerText = ord;
+            document.getElementById('synced-count').innerText = gsync;
+        }
+
+        async function toggleStatus(table, id, current) {
+            if(!sb) return;
+            const { error } = await sb.from(table).update({ is_available: !current }).eq('id', id);
+            if(error) console.error(error.message);
+        }
+
+        async function handleSaveProduct() {
+            if(!sb) return;
+            const name = document.getElementById('p-name').value;
+            const price = document.getElementById('p-price').value;
+            const cat = document.getElementById('p-cat').value;
+            const img = document.getElementById('p-img').value;
+
+            if(!name || !price) return;
+
+            const { error } = await sb.from('products').insert([{
+                name: name,
+                price: parseInt(price),
+                category: cat,
+                image_url: img || 'https://via.placeholder.com/400',
+                is_available: true
+            }]);
+            
+            if(!error) { closeModal(); loadAllData(); }
+        }
+
+        async function handleSaveTopping() {
+            if(!sb) return;
+            const name = document.getElementById('t-name').value;
+            const price = document.getElementById('t-price').value;
+
+            if(!name || !price) return;
+
+            const { error } = await sb.from('toppings').insert([{
+                name: name,
+                price: parseInt(price),
+                is_available: true
+            }]);
+            
+            if(!error) { closeModal(); loadAllData(); }
+        }
+
+        async function handleDelete(table, id) {
+            if(!sb || !confirm("Yakin ingin menghapus item ini dari Cloud?")) return;
+            const { error } = await sb.from(table).delete().eq('id', id);
+            if(!error) loadAllData();
+        }
+
+        async function syncAllToSheet() {
+            const gsUrl = localStorage.getItem('gs_url');
+            if(!gsUrl) return;
+            const unsynced = ordersData.filter(o => o.status === 'Berhasil' && !o.gsheet_synced);
+            if(!unsynced.length) return;
+
+            for(let order of unsynced) {
+                const payload = {
+                    date: new Date(order.created_at).toLocaleString(),
+                    order_id: order.order_id,
+                    customer: order.customer_name,
+                    items: order.items.map(i => i.name).join(', '),
+                    total: order.total_price,
+                    payment: order.payment_method,
+                    status: order.status
+                };
+                try {
+                    await fetch(gsUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                    await sb.from('orders').update({ gsheet_synced: true }).eq('id', order.id);
+                } catch(e) {}
+            }
+            loadAllData();
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            const target = document.getElementById('tab-' + tabId);
+            if(target) target.classList.remove('hidden');
+            document.querySelectorAll('.nav-group .nav-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            
+            const titles = { 'dashboard': 'Ringkasan Utama', 'products': 'Katalog Menu', 'toppings': 'Daftar Topping', 'config': 'Koneksi Cloud', 'integration': 'Google Sheet' };
+            const subtitles = { 'dashboard': 'Pantau performa toko NYEZ.ID Anda secara real-time.', 'products': 'Kelola ketersediaan dan harga menu minuman.', 'toppings': 'Kelola varian topping dan harga tambahannya.', 'config': 'Konfigurasi kredensial akses database cloud.', 'integration': 'Sinkronisasi riwayat transaksi ke laporan Sheet.' };
+            
+            document.getElementById('page-title').innerText = titles[tabId] || 'Admin Panel';
+            document.getElementById('page-subtitle').innerText = subtitles[tabId] || '';
+        }
+
+        function setCategory(val, el) {
+            document.querySelectorAll('.category-option').forEach(opt => opt.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('p-cat').value = val;
+        }
+
+        function saveCloudConfig() {
+            const url = document.getElementById('sb-url').value.trim();
+            const key = document.getElementById('sb-key').value.trim();
+            if(!url || !key) return;
+            localStorage.setItem('sb_url', url);
+            localStorage.setItem('sb_key', key);
+            location.reload();
+        }
+
+        function saveSheetConfig() {
+            localStorage.setItem('gs_url', document.getElementById('gs-url').value.trim());
+        }
+
+        function resetToDefault() {
+            if(confirm("Hapus pengaturan kustom?")) {
+                localStorage.removeItem('sb_url');
+                localStorage.removeItem('sb_key');
+                location.reload();
+            }
+        }
+
+        function resetLocalStorage() {
+            if(confirm("Hapus semua data config browser?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function openModal(type) {
+            document.getElementById(type === 'product' ? 'modalProduct' : 'modalTopping').classList.remove('hidden');
+            if(type === 'product') {
+                // Reset category to default when opening
+                const defaultCat = document.querySelector('.category-option[data-value="chocolate"]');
+                setCategory('chocolate', defaultCat);
+            }
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>

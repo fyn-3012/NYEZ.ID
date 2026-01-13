@@ -206,7 +206,6 @@
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(142, 68, 173, 0.3); }
         .btn-gsheet { background: var(--gsheet); color: white; box-shadow: 0 4px 12px rgba(15, 157, 88, 0.2); }
         .btn-ghost { background: #f1f5f9; color: #64748b; }
-        .btn-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fee2e2; }
 
         /* --- MODAL --- */
         .modal-overlay { 
@@ -237,7 +236,6 @@
         .modal-body { padding: 40px; overflow-y: auto; flex-grow: 1; }
         .modal-footer { padding: 25px 40px; background: #f8fafc; border-top: 1px solid #f1f5f9; flex-shrink: 0; }
 
-        /* --- IMPROVED INPUT GROUP --- */
         .input-group { margin-bottom: 24px; position: relative; }
         .input-group label { 
             display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.75rem; 
@@ -252,14 +250,30 @@
             font-size: 0.95rem; color: var(--text-main); background: #f8fafc;
             font-weight: 600;
         }
-        .input-box:focus { 
-            border-color: var(--primary-light); 
-            background: #ffffff; 
-            box-shadow: 0 0 0 4px rgba(142, 68, 173, 0.08); 
-        }
-        .input-box:focus + i { color: var(--primary); }
+        .input-box:focus { border-color: var(--primary-light); background: #ffffff; }
 
-        /* --- AESTHETIC CATEGORY SELECTOR --- */
+        /* --- FILE UPLOAD STYLE --- */
+        .file-upload-wrapper {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            border: 2px dashed #e2e8f0;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: 0.3s;
+            overflow: hidden;
+        }
+        .file-upload-wrapper:hover { border-color: var(--primary); background: #f5f3ff; }
+        .file-upload-wrapper input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .file-upload-wrapper i { font-size: 2rem; color: #94a3b8; margin-bottom: 10px; }
+        .file-upload-wrapper span { font-size: 0.85rem; font-weight: 700; color: #64748b; }
+        .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+
         .category-selector {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -273,40 +287,13 @@
             background: #f8fafc;
             cursor: pointer;
             text-align: center;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: 0.3s;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 8px;
         }
-        .category-option i {
-            font-size: 1.4rem;
-            color: #94a3b8;
-            transition: 0.3s;
-        }
-        .category-option span {
-            font-size: 0.7rem;
-            font-weight: 800;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .category-option:hover {
-            background: #f1f5f9;
-            border-color: #e2e8f0;
-        }
-        .category-option.active {
-            border-color: var(--primary);
-            background: #f5f3ff;
-            box-shadow: 0 4px 12px rgba(142, 68, 173, 0.1);
-        }
-        .category-option.active i {
-            color: var(--primary);
-            transform: scale(1.1);
-        }
-        .category-option.active span {
-            color: var(--primary);
-        }
+        .category-option.active { border-color: var(--primary); background: #f5f3ff; color: var(--primary); }
 
         #sync-status {
             display: flex; align-items: center; gap: 8px; padding: 8px 16px; 
@@ -315,14 +302,6 @@
         }
 
         .hidden { display: none !important; }
-
-        @media (max-width: 1024px) {
-            .sidebar { width: 85px; padding: 40px 10px; }
-            .sidebar-logo span, .nav-btn span { display: none; }
-            .main-content { margin-left: 85px; width: calc(100% - 85px); padding: 32px; }
-            .stats-grid { grid-template-columns: 1fr; }
-            .card-header { justify-content: center; text-align: center; }
-        }
     </style>
 </head>
 <body>
@@ -361,13 +340,12 @@
     <!-- Main Content -->
     <main class="main-content">
         
-        <!-- Header Section -->
         <header>
             <div>
                 <h2 id="page-title">Ringkasan Utama</h2>
                 <p id="page-subtitle" style="color: var(--text-muted); font-weight: 500; margin-top: 4px;">Pantau performa toko NYEZ.ID Anda secara real-time.</p>
             </div>
-            <div id="sync-status" style="color: var(--danger);">
+            <div id="sync-status">
                 <i class="fas fa-circle-notch fa-spin"></i>
                 <span>MENGHUBUNGKAN...</span>
             </div>
@@ -400,9 +378,7 @@
                         <thead>
                             <tr><th>Waktu</th><th>Pelanggan</th><th>Items</th><th>Total</th><th>Status</th></tr>
                         </thead>
-                        <tbody id="orders-tbody">
-                            <!-- Dimuat via JS -->
-                        </tbody>
+                        <tbody id="orders-tbody"></tbody>
                     </table>
                 </div>
             </div>
@@ -412,7 +388,7 @@
         <div id="tab-products" class="tab-content hidden">
             <div class="card">
                 <div class="card-header">
-                    <h3>Katalog Menu Minuman 🥤</h3>
+                    <h3>Katalog Menu Minuman</h3>
                     <button class="btn btn-primary" onclick="openModal('product')"><i class="fas fa-plus"></i> Tambah Menu</button>
                 </div>
                 <div class="table-container">
@@ -430,7 +406,7 @@
         <div id="tab-toppings" class="tab-content hidden">
             <div class="card">
                 <div class="card-header">
-                    <h3>Manajemen Topping ✨</h3>
+                    <h3>Manajemen Topping</h3>
                     <button class="btn btn-primary" onclick="openModal('topping')"><i class="fas fa-plus"></i> Tambah Topping</button>
                 </div>
                 <div class="table-container">
@@ -447,7 +423,7 @@
         <!-- Tab: Cloud Config -->
         <div id="tab-config" class="tab-content hidden">
             <div class="card" style="max-width: 650px;">
-                <h3 style="margin-bottom: 25px;">Koneksi Database Cloud 🔑</h3>
+                <h3 style="margin-bottom: 25px;">Koneksi Database Cloud</h3>
                 <div class="input-group">
                     <label>Supabase Project URL</label>
                     <div class="input-wrapper">
@@ -463,12 +439,8 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 15px;">
-                    <button class="btn btn-primary" onclick="saveCloudConfig()" style="flex: 2; justify-content: center;">
-                        <i class="fas fa-plug-circle-check"></i> Hubungkan Database
-                    </button>
-                    <button class="btn btn-ghost" onclick="resetToDefault()" style="flex: 1; justify-content: center;">
-                        <i class="fas fa-rotate"></i> Reset
-                    </button>
+                    <button class="btn btn-primary" onclick="saveCloudConfig()" style="flex: 1;">Update Koneksi</button>
+                    <button class="btn btn-ghost" onclick="resetToDefault()">Reset</button>
                 </div>
             </div>
         </div>
@@ -476,7 +448,7 @@
         <!-- Tab: Integration -->
         <div id="tab-integration" class="tab-content hidden">
             <div class="card" style="max-width: 650px;">
-                <h3 style="margin-bottom: 25px;">Integrasi Laporan Sheet 📊</h3>
+                <h3 style="margin-bottom: 25px;">Integrasi Laporan Sheet</h3>
                 <div class="input-group">
                     <label>Google Apps Script URL</label>
                     <div class="input-wrapper">
@@ -484,28 +456,26 @@
                         <i class="fab fa-google-drive"></i>
                     </div>
                 </div>
-                <button class="btn btn-gsheet" onclick="saveSheetConfig()" style="width: 100%; justify-content: center;">
-                    <i class="fas fa-save"></i> Simpan URL Laporan
-                </button>
-                <div style="margin-top: 25px; padding: 20px; background: #f8fafc; border-radius: var(--radius-lg); font-size: 0.85rem; color: #64748b; line-height: 1.6;">
-                    <p><b>Tips:</b> Gunakan URL dari menu "Deploy as Web App" di Google Apps Script Anda untuk memungkinkan sinkronisasi otomatis riwayat transaksi.</p>
-                </div>
+                <button class="btn btn-gsheet" onclick="saveSheetConfig()" style="width: 100%;">Simpan URL Sheet</button>
             </div>
         </div>
 
     </main>
 
-    <!-- Modal Form (Product) -->
+    <!-- Modal Product -->
     <div id="modalProduct" class="modal-overlay hidden">
         <div class="modal-card">
             <div class="modal-body">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px;">
-                    <div style="width: 45px; height: 45px; border-radius: 12px; background: #f5f3ff; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                        <i class="fas fa-mug-hot"></i>
-                    </div>
-                    <div>
-                        <h2 style="font-weight: 800; font-size: 1.4rem;">Tambah Menu</h2>
-                        <p style="font-size: 0.8rem; color: var(--text-muted);">Masukkan detail produk minuman baru Anda.</p>
+                <h2 id="modal-product-title" style="font-weight: 800; margin-bottom: 25px;">Tambah Menu Baru</h2>
+                <input type="hidden" id="p-id">
+                
+                <div class="input-group">
+                    <label>Gambar Menu</label>
+                    <div class="file-upload-wrapper">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Klik untuk pilih gambar</span>
+                        <input type="file" id="p-img-file" accept="image/*" onchange="previewImage(this)">
+                        <img id="img-preview" class="preview-img">
                     </div>
                 </div>
 
@@ -518,93 +488,60 @@
                 </div>
 
                 <div class="input-group">
-                    <label>Pilih Kategori</label>
+                    <label>Kategori</label>
                     <div class="category-selector">
-                        <div class="category-option active" data-value="chocolate" onclick="setCategory('chocolate', this)">
-                            <i class="fas fa-cookie-bite"></i>
-                            <span>Chocolate</span>
-                        </div>
-                        <div class="category-option" data-value="coffee" onclick="setCategory('coffee', this)">
-                            <i class="fas fa-coffee"></i>
-                            <span>Coffee</span>
-                        </div>
-                        <div class="category-option" data-value="fruit" onclick="setCategory('fruit', this)">
-                            <i class="fas fa-apple-alt"></i>
-                            <span>Fruit</span>
-                        </div>
-                        <div class="category-option" data-value="classic" onclick="setCategory('classic', this)">
-                            <i class="fas fa-mug-hot"></i>
-                            <span>Classic</span>
-                        </div>
-                        <div class="category-option" data-value="spesial" onclick="setCategory('spesial', this)">
-                            <i class="fas fa-star"></i>
-                            <span>Spesial</span>
-                        </div>
+                        <div class="category-option active" data-value="chocolate" onclick="setCategory('chocolate', this)">Chocolate</div>
+                        <div class="category-option" data-value="coffee" onclick="setCategory('coffee', this)">Coffee</div>
+                        <div class="category-option" data-value="fruit" onclick="setCategory('fruit', this)">Fruit</div>
+                        <div class="category-option" data-value="classic" onclick="setCategory('classic', this)">Classic</div>
+                        <div class="category-option" data-value="spesial" onclick="setCategory('spesial', this)">Spesial</div>
                     </div>
                     <input type="hidden" id="p-cat" value="chocolate">
                 </div>
 
                 <div class="input-group">
-                    <label>Harga Jual (Rp)</label>
+                    <label>Harga (Rp)</label>
                     <div class="input-wrapper">
                         <input type="number" id="p-price" class="input-box" placeholder="15000">
                         <i class="fas fa-coins"></i>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label>Link Gambar Produk</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="p-img" class="input-box" placeholder="https://image-url.com/image.jpg">
-                        <i class="fas fa-image"></i>
                     </div>
                 </div>
             </div>
             
             <div class="modal-footer">
                 <div style="display: flex; gap: 15px;">
-                    <button class="btn btn-ghost" onclick="closeModal()" style="flex: 1; justify-content: center;">Batal</button>
-                    <button class="btn btn-primary" onclick="handleSaveProduct()" style="flex: 1.5; justify-content: center;">Simpan Menu</button>
+                    <button class="btn btn-ghost" onclick="closeModal()" style="flex: 1;">Batal</button>
+                    <button class="btn btn-primary" id="btn-save-product" onclick="handleSaveProduct()" style="flex: 1.5;">Simpan Menu</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Form (Topping) -->
+    <!-- Modal Topping -->
     <div id="modalTopping" class="modal-overlay hidden">
         <div class="modal-card">
             <div class="modal-body">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px;">
-                    <div style="width: 45px; height: 45px; border-radius: 12px; background: #f0f9ff; color: var(--info); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                        <i class="fas fa-ice-cream"></i>
-                    </div>
-                    <div>
-                        <h2 style="font-weight: 800; font-size: 1.4rem;">Tambah Topping</h2>
-                        <p style="font-size: 0.8rem; color: var(--text-muted);">Tambahkan pilihan topping menarik.</p>
-                    </div>
-                </div>
-
+                <h2 id="modal-topping-title" style="font-weight: 800; margin-bottom: 25px;">Tambah Topping</h2>
+                <input type="hidden" id="t-id">
                 <div class="input-group">
                     <label>Nama Topping</label>
                     <div class="input-wrapper">
-                        <input type="text" id="t-name" class="input-box" placeholder="Contoh: Bubble Pearl">
+                        <input type="text" id="t-name" class="input-box" placeholder="Contoh: Pearl">
                         <i class="fas fa-cookie"></i>
                     </div>
                 </div>
-
                 <div class="input-group">
-                    <label>Harga Tambahan (Rp)</label>
+                    <label>Harga (Rp)</label>
                     <div class="input-wrapper">
                         <input type="number" id="t-price" class="input-box" placeholder="3000">
                         <i class="fas fa-plus-circle"></i>
                     </div>
                 </div>
             </div>
-
             <div class="modal-footer">
                 <div style="display: flex; gap: 15px;">
-                    <button class="btn btn-ghost" onclick="closeModal()" style="flex: 1; justify-content: center;">Batal</button>
-                    <button class="btn btn-primary" onclick="handleSaveTopping()" style="flex: 1.5; justify-content: center;">Simpan Topping</button>
+                    <button class="btn btn-ghost" onclick="closeModal()" style="flex: 1;">Batal</button>
+                    <button class="btn btn-primary" id="btn-save-topping" onclick="handleSaveTopping()" style="flex: 1.5;">Simpan Topping</button>
                 </div>
             </div>
         </div>
@@ -616,195 +553,203 @@
 
         let sb = null;
         let ordersData = [];
+        let localProducts = [];
+        let localToppings = [];
 
         async function initApp() {
             const statusEl = document.querySelector('#sync-status span');
             const statusIcon = document.querySelector('#sync-status i');
 
-            let url = (localStorage.getItem('sb_url') || DEFAULT_URL).trim().replace(/\/$/, "");
-            let key = (localStorage.getItem('sb_key') || DEFAULT_KEY).trim();
+            const url = (localStorage.getItem('sb_url') || DEFAULT_URL).trim();
+            const key = (localStorage.getItem('sb_key') || DEFAULT_KEY).trim();
+            
+            try {
+                sb = supabase.createClient(url, key);
+                await loadAllData();
+                document.getElementById('sb-url').value = url;
+                document.getElementById('sb-key').value = key;
+                document.getElementById('gs-url').value = localStorage.getItem('gs_url') || '';
+                
+                statusEl.innerText = 'LIVE CLOUD AKTIF';
+                document.getElementById('sync-status').style.color = 'var(--success)';
+                statusIcon.className = 'fas fa-circle-check';
+                
+                setInterval(loadAllData, 5000);
+            } catch (e) {
+                statusEl.innerText = 'TERPUTUS';
+                document.getElementById('sync-status').style.color = 'var(--danger)';
+            }
+        }
 
-            if (url && key) {
-                try {
-                    sb = supabase.createClient(url, key);
-                    const success = await loadAllData();
-                    
-                    if (success) {
-                        statusEl.innerText = 'LIVE CLOUD AKTIF';
-                        document.getElementById('sync-status').style.color = 'var(--success)';
-                        statusIcon.className = 'fas fa-circle-check';
-                        setupRealtime();
-                        
-                        // Menambahkan interval refresh otomatis setiap 5 detik
-                        setInterval(loadAllData, 5000);
-                    } else {
-                        throw new Error("Gagal mengambil data.");
-                    }
-                    
-                    document.getElementById('sb-url').value = url;
-                    document.getElementById('sb-key').value = key;
-                } catch (e) {
-                    console.error("Supabase Error:", e);
-                    statusEl.innerText = 'CLOUD TERPUTUS';
-                    document.getElementById('sync-status').style.color = 'var(--danger)';
-                    statusIcon.className = 'fas fa-circle-xmark';
+        function previewImage(input) {
+            const preview = document.getElementById('img-preview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
                 }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function handleSaveProduct() {
+            if(!sb) return;
+            const btn = document.getElementById('btn-save-product');
+            const fileInput = document.getElementById('p-img-file');
+            const name = document.getElementById('p-name').value;
+            const price = document.getElementById('p-price').value;
+            const cat = document.getElementById('p-cat').value;
+            const id = document.getElementById('p-id').value;
+
+            if(!name || !price) return alert("Lengkapi data!");
+
+            btn.innerText = "Menyimpan...";
+            btn.disabled = true;
+
+            try {
+                let imageUrl = "";
+                
+                // Jika mengunggah file baru
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}.${fileExt}`;
+                    const filePath = `products/${fileName}`;
+
+                    let { error: uploadError } = await sb.storage
+                        .from('menu-images')
+                        .upload(filePath, file);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: publicUrlData } = sb.storage
+                        .from('menu-images')
+                        .getPublicUrl(filePath);
+
+                    imageUrl = publicUrlData.publicUrl;
+                }
+
+                const productData = {
+                    name: name,
+                    price: parseInt(price),
+                    category: cat
+                };
+
+                // Hanya update URL gambar jika ada file baru
+                if (imageUrl) productData.image_url = imageUrl;
+
+                let dbError;
+                if (id) {
+                    // Update
+                    const { error } = await sb.from('products').update(productData).eq('id', id);
+                    dbError = error;
+                } else {
+                    // Insert (harus ada gambar untuk produk baru)
+                    if (!imageUrl) throw new Error("Gambar wajib diunggah untuk produk baru.");
+                    productData.image_url = imageUrl;
+                    productData.is_available = true;
+                    const { error } = await sb.from('products').insert([productData]);
+                    dbError = error;
+                }
+
+                if (dbError) throw dbError;
+
+                closeModal();
+                loadAllData();
+            } catch (err) {
+                alert("Gagal: " + err.message);
+            } finally {
+                btn.innerText = "Simpan Menu";
+                btn.disabled = false;
             }
         }
 
         async function loadAllData() {
-            if(!sb) return false;
-            try {
-                const fetchProducts = sb.from('products').select('*').order('created_at', { ascending: false });
-                const fetchToppings = sb.from('toppings').select('*').order('name');
-                const fetchOrders = sb.from('orders').select('*').order('created_at', { ascending: false });
-
-                const [pRes, tRes, oRes] = await Promise.all([fetchProducts, fetchToppings, fetchOrders]);
-                
-                if(pRes.error || tRes.error || oRes.error) return false;
-
-                ordersData = oRes.data || [];
-                renderProducts(pRes.data || []);
-                renderToppings(tRes.data || []);
-                renderOrders(ordersData);
-                return true;
-            } catch (err) {
-                return false;
-            }
-        }
-
-        function setupRealtime() {
             if(!sb) return;
-            sb.removeAllChannels();
-            sb.channel('admin-sync').on('postgres_changes', { event: '*', schema: 'public' }, () => loadAllData()).subscribe();
+            const [p, t, o] = await Promise.all([
+                sb.from('products').select('*').order('created_at', { ascending: false }),
+                sb.from('toppings').select('*').order('name'),
+                sb.from('orders').select('*').order('created_at', { ascending: false })
+            ]);
+
+            localProducts = p.data || [];
+            localToppings = t.data || [];
+            ordersData = o.data || [];
+            
+            renderProducts(localProducts);
+            renderToppings(localToppings);
+            renderOrders(ordersData);
         }
 
         function renderProducts(data) {
-            const tbody = document.getElementById('products-tbody');
-            if(!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Daftar menu masih kosong.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = data.map(p => `
+            document.getElementById('products-tbody').innerHTML = data.map(p => `
                 <tr>
-                    <td><img src="${p.image_url}" class="product-img-mini" onerror="this.src='https://via.placeholder.com/60'"></td>
-                    <td style="font-weight:700; color:#1e293b;">${p.name}</td>
-                    <td><span class="badge" style="background:#f1f5f9; color:var(--text-muted);">${p.category}</span></td>
+                    <td><img src="${p.image_url}" class="product-img-mini" onerror="this.src='https://via.placeholder.com/50'"></td>
+                    <td style="font-weight:700;">${p.name}</td>
+                    <td><span class="badge" style="background:#f1f5f9; color:#64748b;">${p.category}</span></td>
                     <td style="font-weight:800; color:var(--primary);">Rp ${p.price.toLocaleString()}</td>
                     <td>
                         <span class="badge ${p.is_available ? 'badge-success':'badge-danger'}" onclick="toggleStatus('products', '${p.id}', ${p.is_available})">
                             ${p.is_available ? 'Tersedia':'Habis'}
                         </span>
                     </td>
-                    <td><button onclick="handleDelete('products', '${p.id}')" style="color:var(--danger); border:none; background:none; cursor:pointer; font-size:1.1rem;"><i class="fas fa-trash-can"></i></button></td>
+                    <td>
+                        <div style="display:flex; gap:10px;">
+                            <button onclick="openEditProduct('${p.id}')" style="color:var(--primary); border:none; background:none; cursor:pointer;"><i class="fas fa-edit"></i></button>
+                            <button onclick="handleDelete('products', '${p.id}')" style="color:var(--danger); border:none; background:none; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
                 </tr>
             `).join('');
         }
 
         function renderToppings(data) {
-            const tbody = document.getElementById('toppings-tbody');
-            if(!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Daftar topping masih kosong.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = data.map(t => `
+            document.getElementById('toppings-tbody').innerHTML = data.map(t => `
                 <tr>
-                    <td style="font-weight:700; color:#1e293b;">${t.name}</td>
+                    <td style="font-weight:700;">${t.name}</td>
                     <td style="font-weight:800; color:var(--primary);">+ Rp ${t.price.toLocaleString()}</td>
                     <td>
                         <span class="badge ${t.is_available ? 'badge-success':'badge-danger'}" onclick="toggleStatus('toppings', '${t.id}', ${t.is_available})">
                             ${t.is_available ? 'Tersedia':'Habis'}
                         </span>
                     </td>
-                    <td><button onclick="handleDelete('toppings', '${t.id}')" style="color:var(--danger); border:none; background:none; cursor:pointer; font-size:1.1rem;"><i class="fas fa-trash-can"></i></button></td>
+                    <td>
+                        <div style="display:flex; gap:10px;">
+                            <button onclick="openEditTopping('${t.id}')" style="color:var(--primary); border:none; background:none; cursor:pointer;"><i class="fas fa-edit"></i></button>
+                            <button onclick="handleDelete('toppings', '${t.id}')" style="color:var(--danger); border:none; background:none; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
                 </tr>
             `).join('');
         }
 
         function renderOrders(data) {
-            let rev = 0, ord = 0, gsync = 0;
-            const tbody = document.getElementById('orders-tbody');
-            
-            if(!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">Belum ada riwayat transaksi cloud.</td></tr>';
-            } else {
-                tbody.innerHTML = data.map(o => {
-                    ord++;
-                    const cleanPrice = parseInt(o.total_price.replace(/[^\d]/g, '')) || 0;
-                    if(o.status === 'Berhasil') rev += cleanPrice;
-                    if(o.gsheet_synced) gsync++;
-
-                    const sClass = o.status === 'Berhasil' ? 'badge-success' : (o.status.includes('Batal') ? 'badge-danger' : 'badge-pending');
-                    return `
-                        <tr>
-                            <td style="font-size:0.75rem; color:#94a3b8; font-weight:600;">${new Date(o.created_at).toLocaleString('id-ID')}</td>
-                            <td style="font-weight:700; color:#1e293b;">${o.customer_name}</td>
-                            <td style="font-size:0.8rem; color:#64748b; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${o.items.map(i => i.name).join(', ')}</td>
-                            <td style="font-weight:800; color:var(--primary);">${o.total_price}</td>
-                            <td><span class="badge ${sClass}">${o.status}</span></td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-
-            document.getElementById('total-revenue').innerText = "Rp " + rev.toLocaleString('id-ID');
-            document.getElementById('total-orders').innerText = ord;
+            let rev = 0, gsync = 0;
+            document.getElementById('orders-tbody').innerHTML = data.map(o => {
+                const cleanPrice = parseInt(o.total_price.replace(/\D/g,'')) || 0;
+                if(o.status === 'Berhasil') rev += cleanPrice;
+                if(o.gsheet_synced) gsync++;
+                return `
+                    <tr>
+                        <td style="font-size:0.75rem; color:#94a3b8;">${new Date(o.created_at).toLocaleString()}</td>
+                        <td style="font-weight:700;">${o.customer_name}</td>
+                        <td style="font-size:0.8rem;">${o.items.map(i => i.name).join(', ')}</td>
+                        <td style="font-weight:800; color:var(--primary);">${o.total_price}</td>
+                        <td><span class="badge ${o.status === 'Berhasil' ? 'badge-success' : 'badge-pending'}">${o.status}</span></td>
+                    </tr>
+                `;
+            }).join('');
+            document.getElementById('total-revenue').innerText = "Rp " + rev.toLocaleString();
+            document.getElementById('total-orders').innerText = data.length;
             document.getElementById('synced-count').innerText = gsync;
-        }
-
-        async function toggleStatus(table, id, current) {
-            if(!sb) return;
-            const { error } = await sb.from(table).update({ is_available: !current }).eq('id', id);
-            if(error) console.error(error.message);
-        }
-
-        async function handleSaveProduct() {
-            if(!sb) return;
-            const name = document.getElementById('p-name').value;
-            const price = document.getElementById('p-price').value;
-            const cat = document.getElementById('p-cat').value;
-            const img = document.getElementById('p-img').value;
-
-            if(!name || !price) return;
-
-            const { error } = await sb.from('products').insert([{
-                name: name,
-                price: parseInt(price),
-                category: cat,
-                image_url: img || 'https://via.placeholder.com/400',
-                is_available: true
-            }]);
-            
-            if(!error) { closeModal(); loadAllData(); }
-        }
-
-        async function handleSaveTopping() {
-            if(!sb) return;
-            const name = document.getElementById('t-name').value;
-            const price = document.getElementById('t-price').value;
-
-            if(!name || !price) return;
-
-            const { error } = await sb.from('toppings').insert([{
-                name: name,
-                price: parseInt(price),
-                is_available: true
-            }]);
-            
-            if(!error) { closeModal(); loadAllData(); }
-        }
-
-        async function handleDelete(table, id) {
-            if(!sb || !confirm("Yakin ingin menghapus item ini dari Cloud?")) return;
-            const { error } = await sb.from(table).delete().eq('id', id);
-            if(!error) loadAllData();
         }
 
         async function syncAllToSheet() {
             const gsUrl = localStorage.getItem('gs_url');
-            if(!gsUrl) return;
+            if(!gsUrl) return alert("Konfigurasi Google Sheet URL terlebih dahulu!");
             const unsynced = ordersData.filter(o => o.status === 'Berhasil' && !o.gsheet_synced);
-            if(!unsynced.length) return;
+            if(!unsynced.length) return alert("Semua transaksi sudah tersinkron.");
 
             for(let order of unsynced) {
                 const payload = {
@@ -813,7 +758,7 @@
                     customer: order.customer_name,
                     items: order.items.map(i => i.name).join(', '),
                     total: order.total_price,
-                    payment: order.payment_method,
+                    payment: order.payment_method || 'Cash',
                     status: order.status
                 };
                 try {
@@ -822,20 +767,91 @@
                 } catch(e) {}
             }
             loadAllData();
+            alert("Sinkronisasi selesai.");
         }
 
-        function switchTab(tabId, btn) {
+        async function toggleStatus(table, id, current) {
+            await sb.from(table).update({ is_available: !current }).eq('id', id);
+            loadAllData();
+        }
+
+        async function handleDelete(table, id) {
+            if(confirm("Hapus item ini?")) {
+                await sb.from(table).delete().eq('id', id);
+                loadAllData();
+            }
+        }
+
+        async function handleSaveTopping() {
+            const name = document.getElementById('t-name').value;
+            const price = document.getElementById('t-price').value;
+            const id = document.getElementById('t-id').value;
+            
+            if(!name || !price) return;
+            
+            const btn = document.getElementById('btn-save-topping');
+            btn.innerText = "Menyimpan...";
+            btn.disabled = true;
+
+            const toppingData = { name, price: parseInt(price) };
+
+            try {
+                if (id) {
+                    await sb.from('toppings').update(toppingData).eq('id', id);
+                } else {
+                    toppingData.is_available = true;
+                    await sb.from('toppings').insert([toppingData]);
+                }
+                closeModal();
+                loadAllData();
+            } catch (err) {
+                alert("Error: " + err.message);
+            } finally {
+                btn.innerText = "Simpan Topping";
+                btn.disabled = false;
+            }
+        }
+
+        function openEditProduct(id) {
+            const p = localProducts.find(x => x.id === id);
+            if (!p) return;
+
+            document.getElementById('p-id').value = p.id;
+            document.getElementById('p-name').value = p.name;
+            document.getElementById('p-price').value = p.price;
+            
+            // Set kategori UI
+            const catOption = document.querySelector(`.category-option[data-value="${p.category}"]`);
+            if (catOption) setCategory(p.category, catOption);
+
+            // Preview gambar
+            const preview = document.getElementById('img-preview');
+            preview.src = p.image_url;
+            preview.style.display = 'block';
+
+            document.getElementById('modal-product-title').innerText = "Edit Menu";
+            document.getElementById('btn-save-product').innerText = "Update Menu";
+            document.getElementById('modalProduct').classList.remove('hidden');
+        }
+
+        function openEditTopping(id) {
+            const t = localToppings.find(x => x.id === id);
+            if (!t) return;
+
+            document.getElementById('t-id').value = t.id;
+            document.getElementById('t-name').value = t.name;
+            document.getElementById('t-price').value = t.price;
+
+            document.getElementById('modal-topping-title').innerText = "Edit Topping";
+            document.getElementById('btn-save-topping').innerText = "Update Topping";
+            document.getElementById('modalTopping').classList.remove('hidden');
+        }
+
+        function switchTab(id, btn) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-            const target = document.getElementById('tab-' + tabId);
-            if(target) target.classList.remove('hidden');
-            document.querySelectorAll('.nav-group .nav-btn').forEach(b => b.classList.remove('active'));
-            if(btn) btn.classList.add('active');
-            
-            const titles = { 'dashboard': 'Ringkasan Utama', 'products': 'Katalog Menu', 'toppings': 'Daftar Topping', 'config': 'Koneksi Cloud', 'integration': 'Google Sheet' };
-            const subtitles = { 'dashboard': 'Pantau performa toko NYEZ.ID Anda secara real-time.', 'products': 'Kelola ketersediaan dan harga menu minuman.', 'toppings': 'Kelola varian topping dan harga tambahannya.', 'config': 'Konfigurasi kredensial akses database cloud.', 'integration': 'Sinkronisasi riwayat transaksi ke laporan Sheet.' };
-            
-            document.getElementById('page-title').innerText = titles[tabId] || 'Admin Panel';
-            document.getElementById('page-subtitle').innerText = subtitles[tabId] || '';
+            document.getElementById('tab-' + id).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
         }
 
         function setCategory(val, el) {
@@ -844,46 +860,43 @@
             document.getElementById('p-cat').value = val;
         }
 
+        function openModal(type) {
+            if (type === 'product') {
+                document.getElementById('p-id').value = "";
+                document.getElementById('p-name').value = "";
+                document.getElementById('p-price').value = "";
+                document.getElementById('p-img-file').value = "";
+                document.getElementById('img-preview').style.display = 'none';
+                document.getElementById('modal-product-title').innerText = "Tambah Menu Baru";
+                document.getElementById('btn-save-product').innerText = "Simpan Menu";
+                
+                const defaultCat = document.querySelector('.category-option[data-value="chocolate"]');
+                setCategory('chocolate', defaultCat);
+                document.getElementById('modalProduct').classList.remove('hidden');
+            } else {
+                document.getElementById('t-id').value = "";
+                document.getElementById('t-name').value = "";
+                document.getElementById('t-price').value = "";
+                document.getElementById('modal-topping-title').innerText = "Tambah Topping";
+                document.getElementById('btn-save-topping').innerText = "Simpan Topping";
+                document.getElementById('modalTopping').classList.remove('hidden');
+            }
+        }
+
+        function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden')); }
+
         function saveCloudConfig() {
-            const url = document.getElementById('sb-url').value.trim();
-            const key = document.getElementById('sb-key').value.trim();
-            if(!url || !key) return;
-            localStorage.setItem('sb_url', url);
-            localStorage.setItem('sb_key', key);
+            localStorage.setItem('sb_url', document.getElementById('sb-url').value.trim());
+            localStorage.setItem('sb_key', document.getElementById('sb-key').value.trim());
             location.reload();
         }
 
         function saveSheetConfig() {
             localStorage.setItem('gs_url', document.getElementById('gs-url').value.trim());
+            alert("URL Sheet berhasil disimpan.");
         }
 
-        function resetToDefault() {
-            if(confirm("Hapus pengaturan kustom?")) {
-                localStorage.removeItem('sb_url');
-                localStorage.removeItem('sb_key');
-                location.reload();
-            }
-        }
-
-        function resetLocalStorage() {
-            if(confirm("Hapus semua data config browser?")) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
-
-        function openModal(type) {
-            document.getElementById(type === 'product' ? 'modalProduct' : 'modalTopping').classList.remove('hidden');
-            if(type === 'product') {
-                // Reset category to default when opening
-                const defaultCat = document.querySelector('.category-option[data-value="chocolate"]');
-                setCategory('chocolate', defaultCat);
-            }
-        }
-
-        function closeModal() {
-            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
-        }
+        function resetToDefault() { if(confirm("Hapus pengaturan kustom?")) { localStorage.clear(); location.reload(); } }
 
         window.onload = initApp;
     </script>

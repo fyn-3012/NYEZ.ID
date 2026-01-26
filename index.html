@@ -172,6 +172,32 @@
             box-shadow: 0 12px 24px -8px rgba(142, 68, 173, 0.5); 
         }
 
+        /* --- MOBILE IDENTITY --- */
+        .mobile-brand-identity {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .brand-logo-wrapper {
+            width: 45px;
+            height: 45px;
+            background: #1a0b2e;
+            color: var(--primary-light);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: var(--shadow-md);
+        }
+        .mobile-brand-identity span {
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: -1.5px;
+            color: #1a0b2e;
+        }
+
         /* --- BOTTOM NAV (MOBILE) --- */
         .bottom-nav {
             display: none;
@@ -299,37 +325,38 @@
         /* --- PRODUCT GRID --- */
         .product-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-            gap: 24px; 
-            padding-top: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 60px 24px; 
+            padding-top: 40px;
         }
 
         .product-card {
             background: var(--white);
-            border-radius: 24px;
-            padding: 16px;
+            border-radius: 28px;
+            padding: 24px;
             box-shadow: var(--shadow-md);
-            border: 2px solid transparent;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2.5px solid transparent;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex; 
+            flex-direction: column; 
             align-items: center;
-            gap: 20px;
             cursor: pointer;
             position: relative;
         }
         
         .product-card:hover { 
-            transform: scale(1.03); 
-            box-shadow: 0 20px 40px -10px rgba(142, 68, 173, 0.15); 
+            transform: translateY(8px); 
+            box-shadow: 0 30px 60px -12px rgba(142, 68, 173, 0.15); 
             border-color: var(--primary-light);
             z-index: 10;
         }
 
         .img-container {
             position: relative;
-            width: 110px;
-            height: 110px;
-            flex-shrink: 0;
+            width: 100%;
+            aspect-ratio: 1/1;
+            margin-top: -70px; 
+            margin-bottom: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -340,45 +367,85 @@
             width: 90%;
             height: 90%;
             background: linear-gradient(135deg, var(--primary-light), var(--primary));
-            border-radius: 18px;
-            opacity: 0.12;
+            border-radius: 24px;
+            opacity: 0.1;
             transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        .product-card:hover .img-accent { transform: scale(1.2) rotate(8deg); opacity: 0.15; }
+
         .product-img {
-            width: 100%;
-            height: 100%;
-            border-radius: 20px;
+            width: 90%;
+            height: 90%;
+            border-radius: 24px;
             object-fit: cover;
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 2;
-            box-shadow: 0 8px 16px -4px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         
-        .product-card:hover .product-img { transform: scale(1.1) translateX(-8px); filter: drop-shadow(0 15px 25px rgba(142, 68, 173, 0.3)); }
+        .product-card:hover .product-img { 
+            transform: scale(1.15) translateY(-10px); 
+            filter: drop-shadow(0 20px 30px rgba(142, 68, 173, 0.4)); 
+        }
 
-        .product-info { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .product-info {
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-        .product-card h4 { font-weight: 800; font-size: 1.15rem; color: var(--text-main); margin-bottom: 4px; transition: 0.3s; letter-spacing: -0.4px; line-height: 1.2; }
-        .product-card .price { font-weight: 900; color: var(--primary); font-size: 1.2rem; margin-bottom: 12px; display: block; }
+        .product-card h4 { 
+            font-weight: 800; 
+            font-size: 1.2rem; 
+            color: var(--text-main); 
+            transition: 0.3s; 
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+        
+        .product-card:hover h4 { color: var(--primary); }
 
-        .btn-add-small {
-            width: fit-content;
-            padding: 8px 16px;
-            border-radius: 12px;
+        .product-description {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            line-height: 1.4;
+            height: 2.8em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .product-card .price { 
+            font-weight: 900; 
+            color: var(--primary); 
+            font-size: 1.4rem; 
+            margin: 10px 0;
+            display: block;
+        }
+
+        .btn-add-action {
+            width: 100%;
+            padding: 14px;
+            border-radius: 18px;
             border: none;
             background: #f1f5f9;
             color: #475569;
             font-weight: 800;
-            font-size: 0.75rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: 0.3s;
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .product-card:hover .btn-add-small { background: #2d134d; color: white; }
+        .product-card:hover .btn-add-action { background: #2d134d; color: white; }
 
         /* --- TRACKING CARDS --- */
         .track-grid {
@@ -503,6 +570,7 @@
             .product-card { gap: 15px; padding: 12px; }
             .cart-float { bottom: 90px; right: 20px; background: #1a0b2e; }
             .search-container { max-width: 100%; }
+            .mobile-brand-identity { display: flex; }
         }
     </style>
 </head>
@@ -560,6 +628,14 @@
     </nav>
 
     <main class="main-content">
+        <!-- Brand Identity for Mobile -->
+        <div class="mobile-brand-identity">
+            <div class="brand-logo-wrapper">
+                <i class="fas fa-gem"></i>
+            </div>
+            <span>NYEZ.ID</span>
+        </div>
+
         <header>
             <div>
                 <h2 id="page-title">Pesan Minuman</h2>
@@ -594,7 +670,11 @@
                 <div class="product-card">
                     <div class="img-container">
                         <div class="img-accent"></div>
-                        <div class="shimmer" style="width:100%; height:100%; border-radius:20px;"></div>
+                        <div class="shimmer" style="width:100%; height:100%; border-radius:24px;"></div>
+                    </div>
+                    <div class="product-info">
+                        <div class="shimmer" style="height:20px; width:70%; margin:0 auto 8px;"></div>
+                        <div class="shimmer" style="height:25px; width:40%; margin:0 auto 12px;"></div>
                     </div>
                 </div>
             </div>
@@ -661,7 +741,7 @@
         </div>
     </div>
 
-    <!-- Modal Kustomisasi -->
+    <!-- Modal Customization -->
     <div id="custom-modal" class="modal-overlay hidden" onclick="closeModal()">
         <div class="modal-card" onclick="event.stopPropagation()">
             <div class="modal-body">
@@ -712,7 +792,7 @@
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-top: 25px; font-weight: 800;">
                     <span style="color: var(--text-muted);">Total Bayar</span>
-                    <span id="checkout-total" style="color: var(--primary); font-size: 1.2rem;">Rp 0</span>
+                    <span id="checkout-total">Rp 0</span>
                 </div>
             </div>
             <div class="modal-footer">
@@ -755,7 +835,6 @@
                 statusEl.innerText = 'ONLINE';
                 document.getElementById('sync-status').style.color = 'var(--success)';
                 
-                // Beri sedikit jeda agar animasi loading terlihat mulus
                 setTimeout(() => {
                     preloader.classList.add('fade-out');
                 }, 1000);
@@ -764,7 +843,7 @@
             } catch (e) {
                 statusEl.innerText = 'OFFLINE';
                 document.getElementById('sync-status').style.color = 'var(--danger)';
-                preloader.classList.add('fade-out'); // Tetap hilangkan jika error
+                preloader.classList.add('fade-out');
             }
         }
 
@@ -809,8 +888,9 @@
                     </div>
                     <div class="product-info">
                         <h4>${p.name}</h4>
+                        <p class="product-description">${p.category.charAt(0).toUpperCase() + p.category.slice(1)} premium dengan rasa segar yang otentik khas NYEZ.ID.</p>
                         <span class="price">Rp ${p.price.toLocaleString()}</span>
-                        <button class="btn-add-small">Pilih <i class="fas fa-plus"></i></button>
+                        <button class="btn-add-action">Pesan Sekarang <i class="fas fa-plus"></i></button>
                     </div>
                 </div>
             `).join('');
@@ -1041,4 +1121,3 @@
     </script>
 </body>
 </html>
-
